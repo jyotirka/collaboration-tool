@@ -51,4 +51,19 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+// Method to compare password (handles both old double-hashed and new single-hashed)
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  try {
+    // First try normal comparison (for new users)
+    const isMatch = await bcrypt.compare(candidatePassword, this.password);
+    if (isMatch) return true;
+    
+    // If that fails, try comparing with double-hashed password (for old users)
+    const hashedCandidate = await bcrypt.hash(candidatePassword, 10);
+    return await bcrypt.compare(hashedCandidate, this.password);
+  } catch (error) {
+    return false;
+  }
+};
+
 module.exports = mongoose.model('User', userSchema);

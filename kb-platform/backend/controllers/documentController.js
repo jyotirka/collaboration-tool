@@ -1,35 +1,48 @@
 const Document = require('../models/Document');
 const User = require('../models/User');
 
-// Function to extract mentions from content
+// Function to extract mentions from content (handles HTML from ReactQuill)
 const extractMentions = (content) => {
+  // Remove HTML tags first, then extract mentions
+  const textContent = content.replace(/<[^>]*>/g, ' ');
   const mentionRegex = /@([a-zA-Z0-9_]+)/g;
   const mentions = [];
   let match;
-  while ((match = mentionRegex.exec(content)) !== null) {
+  while ((match = mentionRegex.exec(textContent)) !== null) {
     mentions.push(match[1]);
   }
   return [...new Set(mentions)]; // Remove duplicates
 };
 
 // Function to process mentions and notify users
-const processMentions = async (content, documentId, authorId) => {
+const processMentions = async (content, documentId, authorId, documentTitle) => {
   const mentionedUsernames = extractMentions(content);
+  console.log('Extracted mentions:', mentionedUsernames);
+  
   if (mentionedUsernames.length === 0) return [];
 
   try {
     const mentionedUsers = await User.find({ username: { $in: mentionedUsernames } });
+    console.log('Found mentioned users:', mentionedUsers.map(u => u.username));
     
     // Add notifications to mentioned users
     for (const user of mentionedUsers) {
       if (user._id.toString() !== authorId) {
-        user.notifications.push({
-          type: 'mention',
-          documentId: documentId,
-          message: `You were mentioned in a document`,
-          read: false
-        });
-        await user.save();
+        // Check if notification already exists to avoid duplicates
+        const existingNotif = user.notifications.find(n => 
+          n.documentId && n.documentId.toString() === documentId.toString() && n.type === 'mention'
+        );
+        
+        if (!existingNotif) {
+          user.notifications.push({
+            type: 'mention',
+            documentId: documentId,
+            message: `You were mentioned in "${documentTitle || 'a document'}"`,
+            read: false
+          });
+          await user.save();
+          console.log(`Notification sent to ${user.username}`);
+        }
       }
     }
     
@@ -54,7 +67,7 @@ const createDocument = async (req, res) => {
     });
 
     // Process mentions
-    const mentionedUserIds = await processMentions(content, newDoc._id, userId);
+    const mentionedUserIds = await processMentions(content, newDoc._id, userId, title);
     if (mentionedUserIds.length > 0) {
       newDoc.mentions = mentionedUserIds;
       newDoc.collaborators = mentionedUserIds;

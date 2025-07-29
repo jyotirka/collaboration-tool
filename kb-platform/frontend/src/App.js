@@ -18,7 +18,7 @@ function Home() {
       <h1 className="home-title">Knowledge Base Platform</h1>
       <p className="home-subtitle">Create, manage, and share your knowledge with the world</p>
       <div className="home-actions">
-        <Link to="/login" className="btn btn-primary">Get Started</Link>
+        <Link to="/login" className="btn btn-secondary">Get Started</Link>
         <Link to="/register" className="btn btn-secondary">Create Account</Link>
       </div>
     </div>

@@ -1,39 +1,96 @@
-// pages/ResetPassword.js
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import '../App.css';
 
 const ResetPassword = () => {
   const { token } = useParams();
+  const navigate = useNavigate();
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [status, setStatus] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus('Resetting...');
+    
+    if (password !== confirmPassword) {
+      setStatus('Passwords do not match');
+      return;
+    }
+    
+    if (password.length < 6) {
+      setStatus('Password must be at least 6 characters long');
+      return;
+    }
+    
+    setIsLoading(true);
+    setStatus('');
 
     try {
-      const res = await axios.post(`/api/auth/reset-password/${token}`, { password });
-      setStatus(res.data.message || 'Password reset successful. You can now login.');
+      const res = await axios.post(`http://localhost:5000/api/auth/reset-password/${token}`, { password });
+      setStatus(res.data.message || 'Password reset successful!');
+      if (res.data.message && res.data.message.includes('success')) {
+        setTimeout(() => navigate('/login'), 2000);
+      }
     } catch (err) {
       setStatus(err.response?.data?.message || 'Error resetting password');
     }
+    setIsLoading(false);
   };
 
   return (
-    <div className="container">
-      <h2>Reset Your Password</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="password"
-          placeholder="New password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Reset Password</button>
-      </form>
-      <p>{status}</p>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Create New Password</h2>
+        <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
+          Enter your new password below.
+        </p>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <input
+              type="password"
+              placeholder="Enter new password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="form-input"
+              required
+              minLength="6"
+            />
+          </div>
+          
+          <div className="form-group">
+            <input
+              type="password"
+              placeholder="Confirm new password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              className="form-input"
+              required
+              minLength="6"
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            disabled={isLoading}
+          >
+            {isLoading ? 'Resetting...' : 'Reset Password'}
+          </button>
+        </form>
+        
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <Link to="/login" className="nav-link">← Back to Login</Link>
+        </div>
+        
+        {status && (
+          <div className={`message ${status.includes('success') ? 'success' : 'error'}`}>
+            {status}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

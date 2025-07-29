@@ -56,14 +56,18 @@ const Editor = () => {
   const handleContentChange = (value) => {
     setContent(value);
     
+    // Convert HTML to plain text for mention detection
+    const textContent = value.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ');
+    
     // Check for @ mentions
-    const lastAtIndex = value.lastIndexOf('@');
+    const lastAtIndex = textContent.lastIndexOf('@');
+    
     if (lastAtIndex !== -1) {
-      const textAfterAt = value.substring(lastAtIndex + 1);
-      const spaceIndex = textAfterAt.indexOf(' ');
+      const textAfterAt = textContent.substring(lastAtIndex + 1);
+      const spaceIndex = textAfterAt.search(/[\s<>&]/);
       const query = spaceIndex === -1 ? textAfterAt : textAfterAt.substring(0, spaceIndex);
       
-      if (query.length > 0 && spaceIndex === -1) {
+      if (query.length > 0 && query.length <= 20) {
         setMentionQuery(query);
         setShowMentions(true);
         searchUsers(query);
@@ -76,16 +80,26 @@ const Editor = () => {
   };
 
   const insertMention = (username) => {
-    const lastAtIndex = content.lastIndexOf('@');
-    const beforeAt = content.substring(0, lastAtIndex);
-    const afterQuery = content.substring(lastAtIndex + mentionQuery.length + 1);
-    const newContent = beforeAt + `@${username} ` + afterQuery;
-    setContent(newContent);
+    // Find the last @ in the plain text version
+    const textContent = content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ');
+    const lastAtIndex = textContent.lastIndexOf('@');
+    
+    if (lastAtIndex !== -1) {
+      // Find corresponding position in HTML content
+      const htmlLastAtIndex = content.lastIndexOf('@');
+      const beforeAt = content.substring(0, htmlLastAtIndex);
+      const afterAt = content.substring(htmlLastAtIndex + mentionQuery.length + 1);
+      const newContent = beforeAt + `@${username} ` + afterAt;
+      setContent(newContent);
+    }
+    
     setShowMentions(false);
+    setUsers([]);
   };
 
   const handleSubmit = async () => {
     setSaving(true);
+    
     try {
       if (docId) {
         await axios.put(`http://localhost:5000/api/documents/${docId}`, 
