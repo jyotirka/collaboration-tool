@@ -1,0 +1,37 @@
+{
+  "name": "knowledge-base-platform",
+  "version": "1.0.0",
+  "description": "A modern, collaborative knowledge base platform with real-time mentions and notifications",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd kb-platform/backend && npm run dev",
+    "client": "cd kb-platform/frontend && npm start",
+    "install-server": "cd kb-platform/backend && npm install",
+    "install-client": "cd kb-platform/frontend && npm install",
+    "install-all": "npm run install-server && npm run install-client",
+    "build": "cd kb-platform/frontend && npm run build"
+  },
+  "keywords": [
+    "knowledge-base",
+    "collaboration",
+    "react",
+    "nodejs",
+    "mongodb",
+    "mentions",
+    "notifications"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/knowledge-base-platform.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/knowledge-base-platform/issues"
+  },
+  "homepage": "https://github.com/yourusername/knowledge-base-platform#readme"
+}
