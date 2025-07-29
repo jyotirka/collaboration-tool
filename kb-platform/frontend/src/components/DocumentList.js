@@ -203,22 +203,43 @@ const DocumentList = () => {
               {filteredDocuments.map((doc) => (
                 <div key={doc._id} className="document-card">
                   <div className="document-title">{doc.title}</div>
+                  
                   <div className="document-meta">
-                    <span style={{ 
-                      background: doc.isPublic ? '#4caf50' : '#ff9800', 
-                      color: 'white', 
-                      padding: '4px 8px', 
-                      borderRadius: '12px', 
-                      fontSize: '12px',
-                      fontWeight: '500'
-                    }}>
-                      {doc.isPublic ? "Public" : "Private"}
-                    </span>
-                    <br />
-                    <small style={{ color: '#666' }}>
-                      Last edited: {new Date(doc.updatedAt).toLocaleDateString()}
-                    </small>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                      <span style={{ 
+                        background: doc.isPublic ? '#4caf50' : '#ff9800', 
+                        color: 'white', 
+                        padding: '4px 8px', 
+                        borderRadius: '12px', 
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}>
+                        {doc.isPublic ? "Public" : "Private"}
+                      </span>
+                    </div>
+                    
+                    <div style={{ marginBottom: '5px' }}>
+                      <strong style={{ color: '#333', fontSize: '13px' }}>Author:</strong>
+                      <span style={{ color: '#666', fontSize: '13px', marginLeft: '5px' }}>
+                        {doc.author?.username || doc.author?.email || 'Unknown'}
+                      </span>
+                    </div>
+                    
+                    <div style={{ marginBottom: '5px' }}>
+                      <strong style={{ color: '#333', fontSize: '13px' }}>Created:</strong>
+                      <span style={{ color: '#666', fontSize: '13px', marginLeft: '5px' }}>
+                        {new Date(doc.createdAt).toLocaleDateString()} at {new Date(doc.createdAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                      </span>
+                    </div>
+                    
+                    <div>
+                      <strong style={{ color: '#333', fontSize: '13px' }}>Last Updated:</strong>
+                      <span style={{ color: '#666', fontSize: '13px', marginLeft: '5px' }}>
+                        {new Date(doc.updatedAt).toLocaleDateString()} at {new Date(doc.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                      </span>
+                    </div>
                   </div>
+                  
                   <div className="document-actions">
                     <button 
                       onClick={() => navigate(`/edit/${doc._id}`)} 
