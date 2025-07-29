@@ -182,9 +182,7 @@ frigga cloud/
 
 <img width="1000" height="600" alt="Screenshot 2025-07-29 115845" src="https://github.com/user-attachments/assets/f79cce17-11e4-433a-8c29-ddd2b55a08fe" />
 
-
-<img width="1000" height="600" alt="Screenshot 2025-07-29 115756" src="https://github.com/user-attachments/assets/8c835430-0512-4a2c-8fe3-7a92a0b1cca4" />
-
+<img width="1396" height="929" alt="Screenshot 2025-07-29 130110" src="https://github.com/user-attachments/assets/cc166de8-fa6d-482e-8135-1230b10fc361" />
 
 <img width="696" height="636" alt="Screenshot 2025-07-29 115730" src="https://github.com/user-attachments/assets/c480ed12-a026-4366-9d7b-9fcbf5dd8dbd" />
 
