@@ -8,6 +8,8 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [status, setStatus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,9 +50,9 @@ const ResetPassword = () => {
         </p>
         
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
+          <div className="form-group" style={{ position: 'relative' }}>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Enter new password"
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -58,11 +60,27 @@ const ResetPassword = () => {
               required
               minLength="6"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '18px'
+              }}
+            >
+              {showPassword ? '🙈' : '👁️'}
+            </button>
           </div>
           
-          <div className="form-group">
+          <div className="form-group" style={{ position: 'relative' }}>
             <input
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               placeholder="Confirm new password"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
@@ -70,6 +88,22 @@ const ResetPassword = () => {
               required
               minLength="6"
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '18px'
+              }}
+            >
+              {showConfirmPassword ? '🙈' : '👁️'}
+            </button>
           </div>
           
           <button 

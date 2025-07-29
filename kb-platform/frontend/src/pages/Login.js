@@ -6,6 +6,7 @@ import '../App.css';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -17,8 +18,9 @@ const Login = () => {
     try {
       const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
-      setMsg("Login successful!");
-      setTimeout(() => navigate('/documents'), 1000);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      setMsg(`Welcome back, ${res.data.user.username}!`);
+      setTimeout(() => navigate('/documents'), 1500);
     } catch (err) {
       setMsg(err.response?.data?.message || 'Login error');
     }
@@ -40,15 +42,31 @@ const Login = () => {
               required
             />
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ position: 'relative' }}>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="form-input"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '18px'
+              }}
+            >
+              {showPassword ? '🙈' : '👁️'}
+            </button>
           </div>
           <button type="submit" className="btn btn-primary" disabled={isLoading}>
             {isLoading ? 'Signing in...' : 'Sign In'}

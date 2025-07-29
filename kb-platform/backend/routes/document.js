@@ -98,7 +98,9 @@ router.get('/search', verifyToken, async (req, res) => {
             { author: req.user.id },
             { isPublic: true },
             { mentions: req.user.id },
-            { collaborators: req.user.id }
+            { collaborators: req.user.id },
+            { viewers: req.user.id },
+            { editors: req.user.id }
           ]
         },
         {
@@ -124,13 +126,22 @@ router.get('/', verifyToken, getAllDocuments);
 // GET single document by ID
 router.get('/:id', verifyToken, async (req, res) => {
   try {
-    const doc = await Document.findById(req.params.id);
+    const doc = await Document.findById(req.params.id).populate('viewers editors', 'username email');
     if (!doc) {
       return res.status(404).json({ message: 'Document not found' });
     }
-    if (doc.author.toString() !== req.user.id && !doc.collaborators.includes(req.user.id)) {
+    
+    const userId = req.user.id;
+    const hasAccess = doc.author.toString() === userId || 
+                     doc.isPublic || 
+                     doc.collaborators.includes(userId) ||
+                     doc.viewers.some(v => v._id.toString() === userId) ||
+                     doc.editors.some(e => e._id.toString() === userId);
+    
+    if (!hasAccess) {
       return res.status(403).json({ message: 'Access denied' });
     }
+    
     res.json(doc);
   } catch (err) {
     console.error('Get document error:', err);
@@ -150,13 +161,22 @@ router.put('/:id', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'Document not found' });
     }
 
-    if (doc.author.toString() !== req.user.id && !doc.collaborators.includes(req.user.id)) {
-      return res.status(403).json({ message: 'Access denied' });
+    const userId = req.user.id;
+    const canEdit = doc.author.toString() === userId || 
+                   doc.collaborators.includes(userId) ||
+                   doc.editors.some(e => e._id.toString() === userId);
+
+    if (!canEdit) {
+      return res.status(403).json({ message: 'Edit access denied' });
     }
 
     doc.title = title || doc.title;
     doc.content = content || doc.content;
-    doc.isPublic = isPublic !== undefined ? isPublic : doc.isPublic;
+    
+    // Only author can change public/private status
+    if (doc.author.toString() === userId) {
+      doc.isPublic = isPublic !== undefined ? isPublic : doc.isPublic;
+    }
 
     // Process mentions
     const mentionedUserIds = await processMentions(content, doc._id, req.user.id, title);
@@ -173,6 +193,71 @@ router.put('/:id', verifyToken, async (req, res) => {
   }
 });
 
+
+// Update document permissions
+router.put('/:id/permissions', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const { viewers, editors, isPublic } = req.body;
+
+  try {
+    const doc = await Document.findById(id);
+    if (!doc) return res.status(404).json({ message: 'Document not found' });
+
+    if (doc.author.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Only author can change permissions' });
+    }
+
+    // Find users by username
+    const viewerUsers = viewers ? await User.find({ username: { $in: viewers } }) : [];
+    const editorUsers = editors ? await User.find({ username: { $in: editors } }) : [];
+
+    doc.viewers = viewerUsers.map(u => u._id);
+    doc.editors = editorUsers.map(u => u._id);
+    doc.isPublic = isPublic !== undefined ? isPublic : doc.isPublic;
+
+    await doc.save();
+    res.json(doc);
+  } catch (err) {
+    console.error('Permissions update error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Generate share link
+router.post('/:id/share', verifyToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const doc = await Document.findById(id);
+    if (!doc) return res.status(404).json({ message: 'Document not found' });
+
+    if (doc.author.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Only author can create share links' });
+    }
+
+    const shareLink = require('crypto').randomBytes(32).toString('hex');
+    doc.shareLink = shareLink;
+    await doc.save();
+
+    res.json({ shareLink: `${req.protocol}://${req.get('host')}/share/${shareLink}` });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Access document via share link
+router.get('/share/:shareLink', async (req, res) => {
+  try {
+    const doc = await Document.findOne({ shareLink: req.params.shareLink })
+      .populate('author', 'username email');
+    
+    if (!doc) return res.status(404).json({ message: 'Document not found' });
+    
+    res.json(doc);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // Delete a document
 router.delete('/:id', verifyToken, async (req, res) => {

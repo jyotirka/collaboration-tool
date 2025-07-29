@@ -10,7 +10,15 @@ const DocumentList = () => {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
 
   // Debounce function
   const debounce = (func, wait) => {
@@ -115,6 +123,7 @@ const DocumentList = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     navigate('/');
   };
 
@@ -132,7 +141,19 @@ const DocumentList = () => {
     <div>
       <nav className="navbar">
         <div className="navbar-content">
-          <div className="logo">Knowledge Base</div>
+          <div className="logo">
+            Knowledge Base
+            {user && (
+              <span style={{ 
+                fontSize: '14px', 
+                fontWeight: 'normal', 
+                marginLeft: '15px',
+                color: '#667eea'
+              }}>
+                Welcome, {user.username}! 👋
+              </span>
+            )}
+          </div>
           <div className="nav-links">
             <button 
               onClick={() => navigate("/notifications")} 
@@ -246,6 +267,12 @@ const DocumentList = () => {
                       className="btn btn-primary btn-small"
                     >
                       Edit
+                    </button>
+                    <button 
+                      onClick={() => navigate(`/privacy/${doc._id}`)} 
+                      className="btn btn-secondary btn-small"
+                    >
+                      Privacy
                     </button>
                     <button 
                       onClick={() => handleDelete(doc._id)} 

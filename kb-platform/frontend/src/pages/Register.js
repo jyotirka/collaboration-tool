@@ -8,6 +8,8 @@ const Register = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [msg, setMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -58,25 +60,57 @@ const Register = () => {
               required 
             />
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ position: 'relative' }}>
             <input 
-              type="password" 
+              type={showPassword ? "text" : "password"} 
               placeholder="Create password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)} 
               className="form-input"
               required 
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '18px'
+              }}
+            >
+              {showPassword ? '🙈' : '👁️'}
+            </button>
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ position: 'relative' }}>
             <input 
-              type="password" 
+              type={showConfirmPassword ? "text" : "password"} 
               placeholder="Confirm password" 
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)} 
               className="form-input"
               required 
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '18px'
+              }}
+            >
+              {showConfirmPassword ? '🙈' : '👁️'}
+            </button>
           </div>
           <button type="submit" className="btn btn-primary" disabled={isLoading}>
             {isLoading ? 'Creating Account...' : 'Sign Up'}

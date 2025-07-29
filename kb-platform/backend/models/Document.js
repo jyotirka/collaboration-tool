@@ -25,6 +25,19 @@ const documentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   }],
+  viewers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  editors: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  shareLink: {
+    type: String,
+    unique: true,
+    sparse: true
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Document', documentSchema);

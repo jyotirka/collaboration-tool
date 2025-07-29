@@ -91,7 +91,9 @@ const getAllDocuments = async (req, res) => {
         { author: userId },
         { isPublic: true },
         { mentions: userId },
-        { collaborators: userId }
+        { collaborators: userId },
+        { viewers: userId },
+        { editors: userId }
       ]
     }).populate('author', 'email username');
 

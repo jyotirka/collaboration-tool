@@ -14,8 +14,16 @@ const Editor = () => {
   const [users, setUsers] = useState([]);
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
+  const [user, setUser] = useState(null);
   const { id: docId } = useParams();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
 
   useEffect(() => {
     if (docId) {
@@ -130,6 +138,7 @@ const Editor = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     navigate('/');
   };
 
@@ -147,7 +156,19 @@ const Editor = () => {
     <div>
       <nav className="navbar">
         <div className="navbar-content">
-          <div className="logo">Knowledge Base</div>
+          <div className="logo">
+            Knowledge Base
+            {user && (
+              <span style={{ 
+                fontSize: '14px', 
+                fontWeight: 'normal', 
+                marginLeft: '15px',
+                color: '#667eea'
+              }}>
+                Welcome, {user.username}! 👋
+              </span>
+            )}
+          </div>
           <div className="nav-links">
             <button onClick={() => navigate('/documents')} className="btn btn-secondary btn-small">
               ← Back to Documents
