@@ -167,6 +167,14 @@ frigga cloud/
 ### Notifications
 - `GET /api/notifications` - Get user notifications
 - `PUT /api/notifications/:id/read` - Mark notification as read
+### This is how the application looks
+<img width="952" height="727" alt="Screenshot 2025-07-29 115715" src="https://github.com/user-attachments/assets/2462c459-5b6f-4cae-bdfe-28b7b205b03c" />
+<img width="1113" height="577" alt="Screenshot 2025-07-29 115706" src="https://github.com/user-attachments/assets/3ba25421-6b4d-4895-836f-6e95edbf096c" />
+<img width="1456" height="902" alt="Screenshot 2025-07-29 115845" src="https://github.com/user-attachments/assets/f79cce17-11e4-433a-8c29-ddd2b55a08fe" />
+<img width="1570" height="742" alt="Screenshot 2025-07-29 115756" src="https://github.com/user-attachments/assets/8c835430-0512-4a2c-8fe3-7a92a0b1cca4" />
+<img width="696" height="636" alt="Screenshot 2025-07-29 115730" src="https://github.com/user-attachments/assets/c480ed12-a026-4366-9d7b-9fcbf5dd8dbd" />
+<img width="777" height="718" alt="Screenshot 2025-07-29 115722" src="https://github.com/user-attachments/assets/0957d00d-e94b-4f57-aedb-03757ec57776" />
+  
 
 ## 🤝 Contributing
 
@@ -187,8 +195,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Express.js for the backend framework
 - All contributors and users of this platform
 
-## 📞 Support
 
+## 📞 Support
 If you have any questions or need help, please open an issue on GitHub or contact the maintainers.
 
 ---
