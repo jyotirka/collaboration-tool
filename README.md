@@ -76,7 +76,7 @@ EMAIL_PASS=your-app-password
 
 Start the backend server:
 ```bash
-npm start
+npx nodemon server.js
 ```
 
 ### Frontend Setup
