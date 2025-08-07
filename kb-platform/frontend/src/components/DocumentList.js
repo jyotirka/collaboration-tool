@@ -262,24 +262,50 @@ const DocumentList = () => {
                   </div>
                   
                   <div className="document-actions">
-                    <button 
-                      onClick={() => navigate(`/edit/${doc._id}`)} 
-                      className="btn btn-primary btn-small"
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      onClick={() => navigate(`/privacy/${doc._id}`)} 
-                      className="btn btn-secondary btn-small"
-                    >
-                      Privacy
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(doc._id)} 
-                      className="btn btn-danger btn-small"
-                    >
-                      Delete
-                    </button>
+                    {/* Debug: Log user permissions */}
+                    {console.log('Doc:', doc.title, 'Author:', doc.author?._id?.toString(), 'User:', user?.id, 'Editors:', doc.editors?.map(e => e ? e._id?.toString() : 'undefined'), 'Raw Editors:', doc.editors)}
+                    
+                    {/* Show Edit button only if user can edit */}
+                    {(doc.author?._id?.toString() === user?.id || 
+                      doc.editors?.some(e => e && e._id?.toString() === user?.id)) && (
+                      <button 
+                        onClick={() => navigate(`/edit/${doc._id}`)} 
+                        className="btn btn-primary btn-small"
+                      >
+                        Edit
+                      </button>
+                    )}
+                    
+                    {/* Show Privacy button only for document author */}
+                    {doc.author?._id?.toString() === user?.id && (
+                      <button 
+                        onClick={() => navigate(`/privacy/${doc._id}`)} 
+                        className="btn btn-secondary btn-small"
+                      >
+                        Privacy
+                      </button>
+                    )}
+                    
+                    {/* Show Delete button only for document author */}
+                    {doc.author?._id?.toString() === user?.id && (
+                      <button 
+                        onClick={() => handleDelete(doc._id)} 
+                        className="btn btn-danger btn-small"
+                      >
+                        Delete
+                      </button>
+                    )}
+                    
+                    {/* Always show View button for documents user can't edit */}
+                    {!(doc.author?._id?.toString() === user?.id || 
+                       doc.editors?.some(e => e && e._id?.toString() === user?.id)) && (
+                      <button 
+                        onClick={() => navigate(`/edit/${doc._id}`)} 
+                        className="btn btn-secondary btn-small"
+                      >
+                        View
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

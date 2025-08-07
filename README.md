@@ -12,15 +12,16 @@ A modern, collaborative knowledge base platform built with React and Node.js. Cr
 
 ### 📝 Document Management
 - Create, edit, and delete documents
-- Rich text editor with ReactQuill
-- Public/Private document visibility
+- Rich text editor with ReactQuill (formatting, links, images)
+- Public/Private document visibility with granular access control
 - Real-time document search by title and content
+- Image upload with automatic compression
 
 ### 🤝 Collaboration
-- **@username mentions** in documents
-- Automatic access granted to mentioned users
-- Real-time notifications system
-- User search and autocomplete
+- **@username mentions** with instant dropdown search
+- Mentioned users get notifications and view access to private documents
+- Real-time notifications system with read/unread status
+- User search and autocomplete for mentions
 
 ### 🎨 Modern UI/UX
 - Beautiful gradient design with glass-morphism effects
@@ -101,8 +102,10 @@ The application will be available at:
 
 ### Key Features
 - **Search Documents**: Use the search bar to find documents by title or content
-- **Mention Users**: Type @username in documents to mention and notify users
+- **Mention Users**: Type @username to see dropdown, mentioned users get view access
 - **Notifications**: Click the notification bell to see mentions and updates
+- **Privacy Controls**: Manage document permissions with viewers and editors
+- **Share Links**: Generate shareable URLs for public documents only
 - **Rich Editing**: Use the toolbar for formatting, links, images, and more
 
 ## 📁 Project Structure
@@ -135,6 +138,8 @@ frigga cloud/
 │       │   │   ├── DocumentList.js
 │       │   │   ├── Editor.js
 │       │   │   ├── Notifications.js
+│       │   │   ├── PrivacySettings.js
+│       │   │   ├── SharedDocument.js
 │       │   │   └── ProtectedRoute.js
 │       │   ├── pages/
 │       │   │   ├── Login.js
@@ -163,6 +168,9 @@ frigga cloud/
 - `DELETE /api/documents/:id` - Delete document
 - `GET /api/documents/search` - Search documents
 - `GET /api/documents/users/search` - Search users for mentions
+- `PUT /api/documents/:id/permissions` - Update document permissions
+- `POST /api/documents/:id/share` - Generate share link (public docs only)
+- `GET /api/documents/shared/:shareLink` - Access document via share link
 
 ### Notifications
 - `GET /api/notifications` - Get user notifications
@@ -192,29 +200,3 @@ frigga cloud/
 
   
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- ReactQuill for the rich text editor
-- MongoDB for the database
-- Express.js for the backend framework
-- All contributors and users of this platform
-
-
-## 📞 Support
-If you have any questions or need help, please open an issue on GitHub or contact the maintainers.
-
----
-
-**Happy Knowledge Sharing! 🚀**

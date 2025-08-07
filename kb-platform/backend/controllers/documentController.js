@@ -66,11 +66,16 @@ const createDocument = async (req, res) => {
       author: userId,
     });
 
-    // Process mentions
+    // Process mentions - grant view access to mentioned users
     const mentionedUserIds = await processMentions(content, newDoc._id, userId, title);
     if (mentionedUserIds.length > 0) {
       newDoc.mentions = mentionedUserIds;
-      newDoc.collaborators = mentionedUserIds;
+      
+      // For private documents, automatically add mentioned users as viewers
+      if (!newDoc.isPublic) {
+        newDoc.viewers = [...new Set([...newDoc.viewers, ...mentionedUserIds])];
+      }
+      
       await newDoc.save();
     }
 
@@ -90,12 +95,10 @@ const getAllDocuments = async (req, res) => {
       $or: [
         { author: userId },
         { isPublic: true },
-        { mentions: userId },
-        { collaborators: userId },
-        { viewers: userId },
-        { editors: userId }
+        // For private docs: only shared users (viewers + editors)
+        { $and: [{ isPublic: false }, { $or: [{ viewers: userId }, { editors: userId }] }] }
       ]
-    }).populate('author', 'email username');
+    }).populate('author', 'email username').populate('editors', '_id username email').populate('viewers', '_id username email');
 
     res.status(200).json(docs);
   } catch (err) {

@@ -9,6 +9,7 @@ import CreateDocument from './components/CreateDocument';
 import Editor from './components/Editor';
 import Notifications from './components/Notifications';
 import PrivacySettings from './components/PrivacySettings';
+import SharedDocument from './components/SharedDocument';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import './App.css';
@@ -148,6 +149,7 @@ function App() {
         <Route path="/edit/:id" element={<ProtectedRoute><Editor /></ProtectedRoute>} /> 
         <Route path="/privacy/:id" element={<ProtectedRoute><PrivacySettings /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+        <Route path="/shared/:shareLink" element={<SharedDocument />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />

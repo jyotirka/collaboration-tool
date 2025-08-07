@@ -45,12 +45,9 @@ const Editor = () => {
   }, [docId]);
 
   const searchUsers = async (query) => {
-    if (!query) {
-      setUsers([]);
-      return;
-    }
     try {
-      const res = await axios.get(`http://localhost:5000/api/documents/users/search?q=${query}`, {
+      const searchQuery = query || '';
+      const res = await axios.get(`http://localhost:5000/api/documents/users/search?q=${searchQuery}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
@@ -58,6 +55,7 @@ const Editor = () => {
       setUsers(res.data);
     } catch (err) {
       console.error('User search failed:', err);
+      setUsers([]);
     }
   };
 
@@ -75,10 +73,10 @@ const Editor = () => {
       const spaceIndex = textAfterAt.search(/[\s<>&]/);
       const query = spaceIndex === -1 ? textAfterAt : textAfterAt.substring(0, spaceIndex);
       
-      if (query.length > 0 && query.length <= 20) {
+      if (query.length >= 0 && query.length <= 20) {
         setMentionQuery(query);
         setShowMentions(true);
-        searchUsers(query);
+        searchUsers(query || '');
       } else {
         setShowMentions(false);
       }
@@ -105,13 +103,72 @@ const Editor = () => {
     setUsers([]);
   };
 
+  const compressImage = (base64, maxSize = 50000) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Calculate new dimensions to reduce file size
+        let { width, height } = img;
+        const maxDimension = 400; // Max width/height
+        
+        if (width > height && width > maxDimension) {
+          height = (height * maxDimension) / width;
+          width = maxDimension;
+        } else if (height > maxDimension) {
+          width = (width * maxDimension) / height;
+          height = maxDimension;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Compress with quality adjustment
+        let quality = 0.7;
+        let compressedBase64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+        
+        // Reduce quality if still too large
+        while (compressedBase64.length > maxSize && quality > 0.1) {
+          quality -= 0.1;
+          compressedBase64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+        }
+        
+        resolve(compressedBase64);
+      };
+      img.src = `data:image/jpeg;base64,${base64}`;
+    });
+  };
+
   const handleSubmit = async () => {
     setSaving(true);
     
     try {
+      let processedContent = content;
+      
+      // Find all base64 images and compress them
+      const imageMatches = content.match(/<img[^>]+src="data:image\/[^;]+;base64,([^"]+)"/g);
+      
+      if (imageMatches) {
+        for (const match of imageMatches) {
+          const base64Match = match.match(/base64,([^"]+)/);
+          if (base64Match && base64Match[1].length > 50000) {
+            try {
+              const compressedBase64 = await compressImage(base64Match[1]);
+              processedContent = processedContent.replace(base64Match[1], compressedBase64);
+            } catch (err) {
+              console.warn('Image compression failed:', err);
+            }
+          }
+        }
+      }
+      
       if (docId) {
         await axios.put(`http://localhost:5000/api/documents/${docId}`, 
-          { title, content, isPublic }, 
+          { title, content: processedContent, isPublic }, 
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -120,7 +177,7 @@ const Editor = () => {
         );
       } else {
         await axios.post(`http://localhost:5000/api/documents`, 
-          { title, content, isPublic }, 
+          { title, content: processedContent, isPublic }, 
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -131,7 +188,11 @@ const Editor = () => {
       navigate('/documents');
     } catch (err) {
       console.error('Save failed:', err);
-      alert('Failed to save document');
+      if (err.response?.status === 413) {
+        alert('Document too large. Please use smaller images.');
+      } else {
+        alert('Failed to save document');
+      }
     }
     setSaving(false);
   };
@@ -235,7 +296,7 @@ const Editor = () => {
                 overflowY: 'auto',
                 minWidth: '200px'
               }}>
-                {users.map(user => (
+                {users.filter(user => user.username).map(user => (
                   <div
                     key={user._id}
                     onClick={() => insertMention(user.username)}
@@ -262,10 +323,10 @@ const Editor = () => {
                       fontSize: '12px',
                       fontWeight: 'bold'
                     }}>
-                      {user.username.charAt(0).toUpperCase()}
+                      {user.username?.charAt(0).toUpperCase() || '?'}
                     </div>
                     <div>
-                      <div style={{ fontWeight: '500' }}>@{user.username}</div>
+                      <div style={{ fontWeight: '500' }}>@{user.username || 'unknown'}</div>
                       <div style={{ fontSize: '12px', color: '#666' }}>{user.email}</div>
                     </div>
                   </div>

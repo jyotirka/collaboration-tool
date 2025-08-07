@@ -67,7 +67,11 @@ router.get('/users/search', verifyToken, async (req, res) => {
   const { q } = req.query;
   console.log('User search query:', q);
   
-  if (!q) return res.json([]);
+  if (!q) {
+    // Return all users when no query (for @ dropdown)
+    const users = await User.find({}).select('username email').limit(10);
+    return res.json(users);
+  }
   
   try {
     const users = await User.find({
@@ -97,10 +101,8 @@ router.get('/search', verifyToken, async (req, res) => {
           $or: [
             { author: req.user.id },
             { isPublic: true },
-            { mentions: req.user.id },
-            { collaborators: req.user.id },
-            { viewers: req.user.id },
-            { editors: req.user.id }
+            // For private docs: only shared users (viewers + editors)
+            { $and: [{ isPublic: false }, { $or: [{ viewers: req.user.id }, { editors: req.user.id }] }] }
           ]
         },
         {
@@ -110,7 +112,7 @@ router.get('/search', verifyToken, async (req, res) => {
           ]
         }
       ]
-    }).populate('author', 'email username').sort({ updatedAt: -1 });
+    }).populate('author', 'email username').populate('editors', '_id username email').populate('viewers', '_id username email').sort({ updatedAt: -1 });
     
     console.log('Search results:', documents.length);
     res.json(documents);
@@ -132,11 +134,16 @@ router.get('/:id', verifyToken, async (req, res) => {
     }
     
     const userId = req.user.id;
-    const hasAccess = doc.author.toString() === userId || 
-                     doc.isPublic || 
-                     doc.collaborators.includes(userId) ||
-                     doc.viewers.some(v => v._id.toString() === userId) ||
-                     doc.editors.some(e => e._id.toString() === userId);
+    let hasAccess = false;
+    
+    if (doc.isPublic) {
+      hasAccess = true; // Public docs accessible to all
+    } else {
+      // Private docs: only author or shared users (viewers + editors)
+      hasAccess = doc.author.toString() === userId || 
+                 doc.viewers.some(v => v._id.toString() === userId) ||
+                 doc.editors.some(e => e._id.toString() === userId);
+    }
     
     if (!hasAccess) {
       return res.status(403).json({ message: 'Access denied' });
@@ -162,9 +169,14 @@ router.put('/:id', verifyToken, async (req, res) => {
     }
 
     const userId = req.user.id;
-    const canEdit = doc.author.toString() === userId || 
-                   doc.collaborators.includes(userId) ||
-                   doc.editors.some(e => e._id.toString() === userId);
+    let canEdit = false;
+    
+    if (doc.author.toString() === userId) {
+      canEdit = true; // Author can always edit
+    } else {
+      // Only shared editors can edit (for both public and private docs)
+      canEdit = doc.editors.some(e => e._id.toString() === userId);
+    }
 
     if (!canEdit) {
       return res.status(403).json({ message: 'Edit access denied' });
@@ -178,11 +190,15 @@ router.put('/:id', verifyToken, async (req, res) => {
       doc.isPublic = isPublic !== undefined ? isPublic : doc.isPublic;
     }
 
-    // Process mentions
+    // Process mentions - grant view access to mentioned users
     const mentionedUserIds = await processMentions(content, doc._id, req.user.id, title);
     if (mentionedUserIds.length > 0) {
       doc.mentions = [...new Set([...doc.mentions, ...mentionedUserIds])];
-      doc.collaborators = [...new Set([...doc.collaborators, ...mentionedUserIds])];
+      
+      // For private documents, automatically add mentioned users as viewers
+      if (!doc.isPublic) {
+        doc.viewers = [...new Set([...doc.viewers, ...mentionedUserIds])];
+      }
     }
 
     const updated = await doc.save();
@@ -223,7 +239,7 @@ router.put('/:id/permissions', verifyToken, async (req, res) => {
   }
 });
 
-// Generate share link
+// Generate share link - only for public documents
 router.post('/:id/share', verifyToken, async (req, res) => {
   const { id } = req.params;
 
@@ -235,18 +251,23 @@ router.post('/:id/share', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'Only author can create share links' });
     }
 
+    // Only allow share links for public documents
+    if (!doc.isPublic) {
+      return res.status(403).json({ message: 'Share links are only available for public documents' });
+    }
+
     const shareLink = require('crypto').randomBytes(32).toString('hex');
     doc.shareLink = shareLink;
     await doc.save();
 
-    res.json({ shareLink: `${req.protocol}://${req.get('host')}/share/${shareLink}` });
+    res.json({ shareLink: `http://localhost:3000/shared/${shareLink}` });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Access document via share link
-router.get('/share/:shareLink', async (req, res) => {
+router.get('/shared/:shareLink', async (req, res) => {
   try {
     const doc = await Document.findOne({ shareLink: req.params.shareLink })
       .populate('author', 'username email');

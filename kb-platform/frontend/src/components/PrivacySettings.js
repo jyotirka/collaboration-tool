@@ -41,7 +41,7 @@ const PrivacySettings = () => {
   const handleSavePermissions = async () => {
     setSaving(true);
     try {
-      const viewerList = viewers.split(',').map(v => v.trim()).filter(v => v);
+      const viewerList = isPublic ? [] : viewers.split(',').map(v => v.trim()).filter(v => v);
       const editorList = editors.split(',').map(e => e.trim()).filter(e => e);
 
       await axios.put(`http://localhost:5000/api/documents/${id}/permissions`, {
@@ -73,7 +73,11 @@ const PrivacySettings = () => {
       setShareLink(res.data.shareLink);
     } catch (err) {
       console.error('Error generating share link:', err);
-      alert('Failed to generate share link');
+      if (err.response?.status === 403) {
+        alert('Share links are only available for public documents');
+      } else {
+        alert('Failed to generate share link');
+      }
     }
   };
 
@@ -111,7 +115,7 @@ const PrivacySettings = () => {
               onChange={(e) => setIsPublic(e.target.checked)}
             />
             <label htmlFor="isPublic">
-              Make this document public (anyone can view, but only authorized users can edit)
+              Make this document public (anyone can view, only editors can edit)
             </label>
           </div>
           <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '5px' }}>
@@ -122,25 +126,27 @@ const PrivacySettings = () => {
           </small>
         </div>
 
-        <div className="form-group">
-          <label style={{ display: 'block', marginBottom: '10px', fontWeight: '500' }}>
-            Viewers (can only view)
-          </label>
-          <input
-            type="text"
-            placeholder="Enter usernames separated by commas (e.g., user1, user2)"
-            value={viewers}
-            onChange={(e) => setViewers(e.target.value)}
-            className="form-input"
-          />
-          <small style={{ color: '#666', fontSize: '12px' }}>
-            Users who can view but not edit this document
-          </small>
-        </div>
+        {!isPublic && (
+          <div className="form-group">
+            <label style={{ display: 'block', marginBottom: '10px', fontWeight: '500' }}>
+              Viewers (can only view)
+            </label>
+            <input
+              type="text"
+              placeholder="Enter usernames separated by commas (e.g., user1, user2)"
+              value={viewers}
+              onChange={(e) => setViewers(e.target.value)}
+              className="form-input"
+            />
+            <small style={{ color: '#666', fontSize: '12px' }}>
+              Users who can view but not edit this document
+            </small>
+          </div>
+        )}
 
         <div className="form-group">
           <label style={{ display: 'block', marginBottom: '10px', fontWeight: '500' }}>
-            Editors (can view and edit)
+            {isPublic ? 'Editors (can edit this public document)' : 'Editors (can view and edit)'}
           </label>
           <input
             type="text"
@@ -150,36 +156,41 @@ const PrivacySettings = () => {
             className="form-input"
           />
           <small style={{ color: '#666', fontSize: '12px' }}>
-            Users who can view and edit this document
+            {isPublic ? 
+              'Only these users can edit this public document (everyone can view)' :
+              'Users who can view and edit this document'
+            }
           </small>
         </div>
 
-        <div className="form-group">
-          <label style={{ display: 'block', marginBottom: '10px', fontWeight: '500' }}>
-            Share Link
-          </label>
-          {shareLink ? (
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <input
-                type="text"
-                value={shareLink}
-                readOnly
-                className="form-input"
-                style={{ flex: 1 }}
-              />
-              <button onClick={copyShareLink} className="btn btn-secondary btn-small">
-                Copy
+        {isPublic && (
+          <div className="form-group">
+            <label style={{ display: 'block', marginBottom: '10px', fontWeight: '500' }}>
+              Share Link
+            </label>
+            {shareLink ? (
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  value={shareLink}
+                  readOnly
+                  className="form-input"
+                  style={{ flex: 1 }}
+                />
+                <button onClick={copyShareLink} className="btn btn-secondary btn-small">
+                  Copy
+                </button>
+              </div>
+            ) : (
+              <button onClick={generateShareLink} className="btn btn-secondary">
+                Generate Share Link
               </button>
-            </div>
-          ) : (
-            <button onClick={generateShareLink} className="btn btn-secondary">
-              Generate Share Link
-            </button>
-          )}
-          <small style={{ color: '#666', fontSize: '12px' }}>
-            🔗 Anyone with this link can view the document (view-only access)
-          </small>
-        </div>
+            )}
+            <small style={{ color: '#666', fontSize: '12px' }}>
+              🔗 Anyone with this link can view the document (view-only access)
+            </small>
+          </div>
+        )}
 
         <div style={{ marginTop: '30px', textAlign: 'right' }}>
           <button 
